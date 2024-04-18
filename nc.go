@@ -113,7 +113,7 @@ func main() {
 	var proxyuser string
 	var proxypw string
 
-	flag.StringVar(&proxyhost, "x", "", "proxy host in the form proxy-server:port")
+	flag.StringVar(&proxyhost, "x", "", "proxy host in the form proxy-server:port or http...., depends on protocol")
 	flag.StringVar(&proxyprotocol, "X", "", "proxy protocol: 5 (socks) or connect")
 	flag.StringVar(&proxyuser, "u", "", "proxy userid")
 	flag.StringVar(&proxypw, "p", "", "proxy password")
