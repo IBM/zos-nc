@@ -6,9 +6,12 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
+
+	"golang.org/x/net/proxy"
 )
 
 var verbose bool
@@ -50,8 +53,8 @@ func ConnToChan(src io.Reader, ch chan Packet, done chan int) {
 		}
 		ch <- buffer
 	}
-
 }
+
 func ChanToConn(ch chan Packet, tgt io.Writer, done chan int) {
 	defer func() {
 		done <- 0
@@ -68,6 +71,7 @@ func ChanToConn(ch chan Packet, tgt io.Writer, done chan int) {
 		buffer, ok = <-ch
 	}
 }
+
 func doConn(con net.Conn) {
 	ch_stdout := make(chan Packet)
 	ch_remote := make(chan Packet)
@@ -80,7 +84,6 @@ func doConn(con net.Conn) {
 	go ChanToConn(ch_remote, con, complete)
 
 	_, _ = <-complete
-
 }
 
 func IsEOF(err error) bool {
@@ -105,6 +108,15 @@ func main() {
 	var destinationPort string
 	var isListen bool
 	var host string
+	var proxyhost string
+	var proxyprotocol string
+	var proxyuser string
+	var proxypw string
+
+	flag.StringVar(&proxyhost, "x", "", "proxy host in the form proxy-server:port")
+	flag.StringVar(&proxyprotocol, "X", "", "proxy protocol: 5 (socks) or connect")
+	flag.StringVar(&proxyuser, "u", "", "proxy userid")
+	flag.StringVar(&proxypw, "p", "", "proxy password")
 	flag.StringVar(&listen, "l", "", "listen to port number n, :n or b:n, where n is port number, b is binding inteface, defaults to 0")
 	flag.BoolVar(&verbose, "v", false, "Noisy")
 	flag.Parse()
@@ -179,14 +191,68 @@ Examples:
 		doConn(con)
 
 	} else if host != "" {
-		con, err := net.Dial("tcp", host+destinationPort)
-		if err != nil {
-			log.Fatalln(err)
+		switch proxyprotocol {
+
+		case "5":
+			if proxyhost != "" {
+				if verbose {
+					log.Println("use socks5 protocol to connect to ", proxyhost)
+				}
+				auth := proxy.Auth{
+					User:     proxyuser,
+					Password: proxypw,
+				}
+				dialer, err := proxy.SOCKS5("tcp", proxyhost, &auth, proxy.Direct)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				con, err := dialer.Dial("tcp", host+destinationPort)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				if verbose {
+					log.Println("Connected to", host+destinationPort)
+				}
+				doConn(con)
+			} else {
+				log.Fatalln("Proxy protocal specified, but not proxy server specified.")
+			}
+		case "connect":
+			if proxyhost != "" {
+				if verbose {
+					log.Println("use http protocol to connect to ", proxyhost)
+				}
+				proxyUrl, err := url.Parse(proxyhost)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				dialer, err := proxy.FromURL(proxyUrl, proxy.Direct)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				con, err := dialer.Dial("tcp", host+destinationPort)
+				if err != nil {
+					log.Fatalln(err)
+				}
+				if verbose {
+					log.Println("Connected to", host+destinationPort)
+				}
+				doConn(con)
+			} else {
+				log.Fatalln("Proxy protocal specified, but not proxy server specified.")
+			}
+		case "":
+			con, err := net.Dial("tcp", host+destinationPort)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			if verbose {
+				log.Println("Connected to", host+destinationPort)
+			}
+			doConn(con)
+		default:
+			log.Fatalln("Unknown protocolcol")
 		}
-		if verbose {
-			log.Println("Connected to", host+destinationPort)
-		}
-		doConn(con)
 	} else {
 		flag.Usage()
 	}
