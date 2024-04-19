@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	connect "github.com/wrouesnel/go.connect-proxy-scheme"
 	"golang.org/x/net/proxy"
 )
 
@@ -224,10 +225,13 @@ Examples:
 				}
 				proxyUrl, err := url.Parse(proxyhost)
 				if err != nil {
+					println("from url.Parse")
 					log.Fatalln(err)
 				}
+				proxy.RegisterDialerType("http", connect.ConnectProxy)
 				dialer, err := proxy.FromURL(proxyUrl, proxy.Direct)
 				if err != nil {
+					println("from proxy.FromURL")
 					log.Fatalln(err)
 				}
 				con, err := dialer.Dial("tcp", host+destinationPort)
