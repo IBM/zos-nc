@@ -122,7 +122,7 @@ func main() {
 	flag.BoolVar(&verbose, "v", false, "Noisy")
 	flag.Parse()
 	if flag.NFlag() == 0 && flag.NArg() == 0 {
-		fmt.Println("\nSimplified nc [-v] [-l port] or [hostname port]\n")
+		fmt.Println("\nSimplified nc [-v] [-l port] or [hostname port]")
 		flag.Usage()
 		fmt.Println(`
 Examples:

@@ -1,10 +1,10 @@
-go 1.21
+go 1.25.0
 
 module github.com/IBM/zos-nc
 
 require (
 	github.com/wrouesnel/go.connect-proxy-scheme v0.0.0-20220926121750-2b62bcbfc923
-	golang.org/x/net v0.24.0
+	golang.org/x/net v0.55.0
 )
 
 require (
