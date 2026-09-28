@@ -16,6 +16,11 @@ import (
 
 var verbose bool
 
+// version defaults to "dev" and is overridden at build time via:
+//   go build -ldflags "-X main.version=..."
+// See Makefile (ZOSNC_VERSION, with git describe / dev-<timestamp> fallback).
+var version = "dev"
+
 type Packet struct {
 	size int
 	data [1500]byte
@@ -112,6 +117,7 @@ func main() {
 	var proxyprotocol string
 	var proxyuser string
 	var proxypw string
+	var showVersion bool
 
 	flag.StringVar(&proxyhost, "x", "", "proxy host in the form proxy-server:port or http...., depends on protocol")
 	flag.StringVar(&proxyprotocol, "X", "", "proxy protocol: 5 (socks) or connect")
@@ -119,7 +125,13 @@ func main() {
 	flag.StringVar(&proxypw, "p", "", "proxy password")
 	flag.StringVar(&listen, "l", "", "listen to port number n, :n or b:n, where n is port number, b is binding inteface, defaults to 0")
 	flag.BoolVar(&verbose, "v", false, "Noisy")
+	flag.BoolVar(&showVersion, "V", false, "Print version and exit")
+	flag.BoolVar(&showVersion, "version", false, "Print version and exit")
 	flag.Parse()
+	if showVersion {
+		fmt.Println(version)
+		return
+	}
 	if flag.NFlag() == 0 && flag.NArg() == 0 {
 		fmt.Println("\nSimplified nc [-v] [-l port] or [hostname port]")
 		flag.Usage()

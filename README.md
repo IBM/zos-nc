@@ -97,6 +97,12 @@ With encryption:
 nc zos-A 4321 | gpg -d --batch --passphrase 123456 2>/dev/null | /bin/pax -v -ppx -r
 ```
 
+## z/OS port build infrastructure
+
+Automated builds for the zopencommunity umbrella project (used by the build
+robot) live in [zopencommunity/zosncport](https://github.com/zopencommunity/zosncport).
+That repository contains only build infrastructure — the source code lives here.
+
 ## Limitations
 
 * TCP only, single connection per invocation (listen accepts once then exits).
